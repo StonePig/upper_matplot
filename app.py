@@ -148,15 +148,15 @@ class mainWin(serial_app_win.serialApp):
 									if(data[rec_len - 3] != 0x5A):
 										break
 
-									cur_temp0 = int.from_bytes(data[0:2],endian_str)
+									cur_temp0 = int.from_bytes(data[0:2],endian_str, signed=True)
 									target_temp0 = int.from_bytes(data[2:4],endian_str)
 									cur_pwm0 = int.from_bytes(data[4:6],endian_str)
 
-									cur_temp1 = int.from_bytes(data[6:8],endian_str)
+									cur_temp1 = int.from_bytes(data[6:8],endian_str, signed=True)
 									target_temp1 = int.from_bytes(data[8:10],endian_str)
 									cur_pwm1 = int.from_bytes(data[10:12],endian_str)
 
-									cur_temp2 = int.from_bytes(data[12:14],endian_str)
+									cur_temp2 = int.from_bytes(data[12:14],endian_str, signed=True)
 									target_temp2 = int.from_bytes(data[14:16],endian_str)
 									cur_pwm2 = int.from_bytes(data[16:18],endian_str)									
 								
@@ -293,7 +293,7 @@ class mainWin(serial_app_win.serialApp):
 			# sel = self.m_comboBox_temp.GetSelection()
 
 			sendbuf += int(0xA5).to_bytes(1,endian_str)
-			sendbuf += int(42).to_bytes(1,endian_str)
+			sendbuf += int(56).to_bytes(1,endian_str)
 
 			for i in heat_dict:
 				self.heat = heat_dict[i]
@@ -313,7 +313,7 @@ class mainWin(serial_app_win.serialApp):
 			print(sendbuf)
 
 			self.com.write(sendbuf)
-			win32api.MessageBox(0, "设置成功", "提醒",win32con.MB_ICONWARNING)
+			# win32api.MessageBox(0, "设置成功", "提醒",win32con.MB_ICONWARNING)
 
 		else:
 			win32api.MessageBox(0, "串口未打开", "提醒",win32con.MB_ICONWARNING)

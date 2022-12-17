@@ -42,21 +42,21 @@ def update_data(cur_temp0, target_temp0, cur_pwm0, cur_temp1, target_temp1, cur_
     global error_code
 
     b_cur_temp0.pop(0)
-    b_cur_temp0.append(cur_temp0)
+    b_cur_temp0.append(cur_temp0/100)
     b_target_temp0.pop(0)
     b_target_temp0.append(target_temp0)
     b_cur_pwm0.pop(0)
     b_cur_pwm0.append(cur_pwm0)
 
     b_cur_temp1.pop(0)
-    b_cur_temp1.append(cur_temp1)
+    b_cur_temp1.append(cur_temp1/100)
     b_target_temp1.pop(0)
     b_target_temp1.append(target_temp1)
     b_cur_pwm1.pop(0)
     b_cur_pwm1.append(cur_pwm1)
 
     b_cur_temp2.pop(0)
-    b_cur_temp2.append(cur_temp2)
+    b_cur_temp2.append(cur_temp2/100)
     b_target_temp2.pop(0)
     b_target_temp2.append(target_temp2)
     b_cur_pwm2.pop(0)
@@ -122,9 +122,9 @@ def update_picture():
     cid_press = fig.canvas.mpl_connect('button_press_event', onpress)
     counter = 0
 
-    ax1 = fig.add_subplot(221)
-    ax2 = fig.add_subplot(222)
-    ax3 = fig.add_subplot(223)
+    ax1 = fig.add_subplot(131)
+    ax2 = fig.add_subplot(132)
+    ax3 = fig.add_subplot(133)
     # ax4 = fig.add_subplot(224)
     # ax31 = ax3.twinx()
     # ax21 = ax2.twinx()
@@ -144,17 +144,17 @@ def update_picture():
     ax1.yaxis.set_ticks([0, 20, 40, 60, 80, 100])
     ax1.grid(linestyle=":", axis="both")
     ax1.set_ylabel(r"水温/PWM")
-    ax1.set_ylim(0, 100)
+    ax1.set_ylim(0, 110)
 
     ax2.yaxis.set_ticks([0, 20, 40, 60, 80, 100])
     ax2.grid(linestyle=":", axis="both")
-    ax2.set_ylabel(r"水温/PWM")
-    ax2.set_ylim(0, 100)
+    ax2.set_ylabel(r"风温/PWM")
+    ax2.set_ylim(0, 110)
 
     ax3.yaxis.set_ticks([0, 20, 40, 60, 80, 100])
     ax3.grid(linestyle=":", axis="both")
-    ax3.set_ylabel(r"水温/PWM")
-    ax3.set_ylim(0, 100)
+    ax3.set_ylabel(r"座温/PWM")
+    ax3.set_ylim(0, 110)
 
     # added these lines
     lns = lns1+lns2+lns3
@@ -169,9 +169,9 @@ def update_picture():
     labs = [l.get_label() for l in lns]
     ax3.legend(lns, labs, loc=2)
 
-    # plt.show()
-    # mng = plt.get_current_fig_manager()
-    # mng.window.state("zoomed")
+    plt.show()
+    mng = plt.get_current_fig_manager()
+    mng.window.state("zoomed")
 
     # 以●绘制最大值点的位置
     y1_max = np.argmax(b_cur_temp0)
@@ -206,11 +206,15 @@ def update_picture():
             ax1.relim()                  # recompute the data limits
             ax1.autoscale_view()         # automatic axis scaling
 
+            ax1.set_xlabel("target temp:" + '{:d}'.format(b_target_temp0[-1]) + ' diff:' + '{:.2f}'.format(b_cur_temp0[-1] - b_target_temp0[-1]))
+
             ax2.lines[0].set_data(sample_time, b_cur_temp1)  # set plot data
             ax2.lines[1].set_data(sample_time, b_target_temp1)  # set plot data
             ax2.lines[2].set_data(sample_time, b_cur_pwm1)  # set plot data
             ax2.relim()                  # recompute the data limits
             ax2.autoscale_view()         # automatic axis scaling
+
+            ax2.set_xlabel("target temp:" + '{:d}'.format(b_target_temp1[-1]) + ' diff:' + '{:.2f}'.format(b_cur_temp1[-1] - b_target_temp1[-1]))
 
             # ax21.lines[0].set_data(sample_time, b_cur_temp1)  # set plot data
             # ax21.relim()                  # recompute the data limits
@@ -222,8 +226,7 @@ def update_picture():
             ax3.relim()                  # recompute the data limits
             ax3.autoscale_view()         # automatic axis scaling
 
-            # ax3.set_xlabel("error_code:" + '0x{:08X}'.format(error_code) + ' hall1:' + '{:d}'.format(
-            #     b_cur_temp2[-1]) + ' diff:' + '{:d}'.format(b_cur_temp2[-1] - b_target_temp2[-1]) + ' time:' + '{:d}'.format(counter))
+            ax3.set_xlabel("target temp:" + '{:d}'.format(b_target_temp2[-1]) + ' diff:' + '{:.2f}'.format(b_cur_temp2[-1] - b_target_temp2[-1]) + ' time:' + '{:d}'.format(counter))
 
             # 以●绘制最大值点的位置
             y1_max = np.argmax(b_cur_temp0)
@@ -268,7 +271,7 @@ if __name__ == '__main__':
         b_cur_temp1.append(i/10)
 
         b_cur_temp2.pop(0)
-        b_cur_temp2.append(50 - i/30)  
+        b_cur_temp2.append(50 - i/30)
 
         i = i + 1
 
