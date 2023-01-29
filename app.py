@@ -125,7 +125,7 @@ class mainWin(serial_app_win.serialApp):
 		print("recv thread start")
 		file_name = "log/record_" + time.strftime("%Y%m%d%H%M%S", time.localtime()) + ".csv"
 		with open(file_name, 'w', encoding='utf-8') as fo:
-			fo.write('time,water temp,set temp,pwm,wind temp,set temp,pwm,seat temp,set temp,pwm' + '\n')
+			fo.write('time,water temp,set temp,pwm,wind temp,set temp,pwm,seat temp,set temp,pwm,motor tarangle' + '\n')
 			content = []
 			line = 0
 			while (self.port_opened):
@@ -139,7 +139,7 @@ class mainWin(serial_app_win.serialApp):
 						if(data_len != 0):
 							print(len(data),data)
 							data_len = len(data)
-							rec_len = 21
+							rec_len = 23
 							if(data_len < rec_len):
 								continue
 							if(data_len % rec_len == 0 and data[0] == 0xA5 and data[1] == rec_len - 3):
@@ -158,11 +158,13 @@ class mainWin(serial_app_win.serialApp):
 
 									cur_temp2 = int.from_bytes(data[12:14],endian_str, signed=True)
 									target_temp2 = int.from_bytes(data[14:16],endian_str)
-									cur_pwm2 = int.from_bytes(data[16:18],endian_str)									
+									cur_pwm2 = int.from_bytes(data[16:18],endian_str)
+
+									motor_tarangle = int.from_bytes(data[18:20],endian_str)								
 								
-									update_data(cur_temp0, target_temp0, cur_pwm0, cur_temp1, target_temp1, cur_pwm1, cur_temp2, target_temp2, cur_pwm2)
+									update_data(cur_temp0, target_temp0, cur_pwm0, cur_temp1, target_temp1, cur_pwm1, cur_temp2, target_temp2, cur_pwm2, motor_tarangle)
 									record_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + ":" + str(int(round(time.time() * 10)) % 10)
-									content.append(record_time + ',' + str(cur_temp0) + ',' + str(target_temp0) +  ',' + str(cur_pwm0)  + ',' + str(cur_temp1)  + ',' + str(target_temp1) + ',' + str(cur_pwm1) + ',' + str(cur_temp2) + ',' + str(target_temp2) + ',' + str(cur_pwm2) + "\n")
+									content.append(record_time + ',' + str(cur_temp0) + ',' + str(target_temp0) +  ',' + str(cur_pwm0)  + ',' + str(cur_temp1)  + ',' + str(target_temp1) + ',' + str(cur_pwm1) + ',' + str(cur_temp2) + ',' + str(target_temp2) + ',' + str(cur_pwm2) + ',' + str(motor_tarangle) + "\n")
 									line = line + 1
 									if(line == 10000):
 										line = 0

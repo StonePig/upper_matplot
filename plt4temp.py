@@ -28,6 +28,8 @@ b_cur_temp2 = [0] * 500
 b_target_temp2 = [0] * 500
 b_cur_pwm2 = [0] * 500
 
+b_motor_tarangle = [0] * 500
+
 
 sample_time = np.arange(500)
 is_play = True
@@ -36,7 +38,7 @@ counter = 0
 
 
 # def update_data(vm, pwm, cur1, cur2, speed1, speed2, cur_hall1, cur_hall2, axis_x, axis_y, axis_z, temp, error_code1):
-def update_data(cur_temp0, target_temp0, cur_pwm0, cur_temp1, target_temp1, cur_pwm1, cur_temp2, target_temp2, cur_pwm2):
+def update_data(cur_temp0, target_temp0, cur_pwm0, cur_temp1, target_temp1, cur_pwm1, cur_temp2, target_temp2, cur_pwm2, motor_tarangle):
     global update_data_flag
     global counter
     global error_code
@@ -61,6 +63,9 @@ def update_data(cur_temp0, target_temp0, cur_pwm0, cur_temp1, target_temp1, cur_
     b_target_temp2.append(target_temp2)
     b_cur_pwm2.pop(0)
     b_cur_pwm2.append(cur_pwm2)
+
+    b_motor_tarangle.pop(0)
+    b_motor_tarangle.append(motor_tarangle)
 
     update_data_flag = True
     counter += 1
@@ -129,9 +134,9 @@ def update_picture():
     # ax31 = ax3.twinx()
     # ax21 = ax2.twinx()
 
-    lns1 = ax1.plot(sample_time, b_cur_temp0, '-r', label='当前水温')
+    lns1 = ax1.plot(sample_time, b_cur_pwm0, '-y', label='当前PWM')
     lns2 = ax1.plot(sample_time, b_target_temp0, '-b', label='设置水温')
-    lns3 = ax1.plot(sample_time, b_cur_pwm0, '-y', label='当前PWM')
+    lns3 = ax1.plot(sample_time, b_cur_temp0, '-r', label='当前水温')
 
     lns4 = ax2.plot(sample_time, b_cur_temp1, '-r', label='当前风温')
     lns5 = ax2.plot(sample_time, b_target_temp1, '-b', label='设置风温')
@@ -192,6 +197,13 @@ def update_picture():
     annotate3 = ax1.annotate(show_max, xy=(
         y1_max, b_cur_temp2[y1_max]), xytext=(y1_max, b_cur_temp2[y1_max]))
 
+    y1_max = np.argmax(b_cur_temp0)
+    ax12_plot, = ax1.plot(y1_max, b_cur_temp0[y1_max], 'k^')
+
+    y1_max = np.argmax(b_cur_temp1)
+    ax22_plot, = ax2.plot(y1_max, b_cur_temp1[y1_max], 'k^')
+
+
     while(True):
         if not plt.fignum_exists(figID):
             break
@@ -200,17 +212,18 @@ def update_picture():
 
         if(is_play is True):
             # plt.clf()
-            ax1.lines[0].set_data(sample_time, b_cur_temp0)  # set plot data
+            ax1.lines[0].set_data(sample_time, b_cur_pwm0)  # set plot data
             ax1.lines[1].set_data(sample_time, b_target_temp0)  # set plot data
-            ax1.lines[2].set_data(sample_time, b_cur_pwm0)  # set plot data
+            ax1.lines[2].set_data(sample_time, b_cur_temp0)  # set plot data
             ax1.relim()                  # recompute the data limits
             ax1.autoscale_view()         # automatic axis scaling
 
             ax1.set_xlabel("target temp:" + '{:d}'.format(b_target_temp0[-1]) + ' diff:' + '{:.2f}'.format(b_cur_temp0[-1] - b_target_temp0[-1]))
 
+            ax2.lines[2].set_data(sample_time, b_cur_pwm1)  # set plot data
             ax2.lines[0].set_data(sample_time, b_cur_temp1)  # set plot data
             ax2.lines[1].set_data(sample_time, b_target_temp1)  # set plot data
-            ax2.lines[2].set_data(sample_time, b_cur_pwm1)  # set plot data
+            
             ax2.relim()                  # recompute the data limits
             ax2.autoscale_view()         # automatic axis scaling
 
@@ -235,6 +248,17 @@ def update_picture():
             annotate1.remove()
             annotate1 = ax1.annotate(show_max, xy=(
                 y1_max, b_cur_temp0[y1_max]), xytext=(y1_max, b_cur_temp0[y1_max]))
+
+            
+            # 状态发生变化
+            tarangle_prev = b_motor_tarangle[-2]
+            tarangle = b_motor_tarangle[-1]
+            for i in range(len(b_motor_tarangle) - 1):
+                tarangle = b_motor_tarangle[i]
+                if(tarangle != tarangle_prev and tarangle > 200):
+                    ax12_plot.set_data(i,b_cur_temp0[i])
+                    ax22_plot.set_data(i,b_cur_temp1[i])
+                tarangle_prev = tarangle
 
             y1_max = np.argmax(b_cur_temp1)
             ax21_plot.set_data(y1_max, b_cur_temp1[y1_max])
