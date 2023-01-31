@@ -6,97 +6,47 @@ from matplotlib import rc
 from pylab import *
 from matplotlib.widgets import Button
 from kneed import KneeLocator
-
-running_dict = {
-    '0': 'init',
-    '1': '首出水',
-    '2': '常温',
-    '3': '强抽',
-    '4': '预热',
-    '5': '加热',
-    '6': '反向',
-    '7': '保护',
-}
-
-b_cur_pwm0 = [0] * 500
-b_cur_temp1 = [0] * 500
-b_cur_temp0 = [0] * 500
-b_target_temp0 = [0] * 500
-b_target_temp1 = [0] * 500
-b_cur_pwm1 = [0] * 500
-b_cur_temp2 = [0] * 500
-b_target_temp2 = [0] * 500
-b_cur_pwm2 = [0] * 500
-
-b_motor_tarangle = [0] * 500
+from scipy.interpolate import interp1d
 
 
-sample_time = np.arange(500)
+b_cur_level = [0] * 1000
+sample_time = np.arange(1000)
 is_play = True
 update_data_flag = True
 counter = 0
+zoom_scale = 5
+zoom_value = [0.05, 0.1, 0.125, 0.25, 0.5, 1, 1.25, 2.5, 5, 10, 12.5, 25, 50, 100]
+is_zoomed = True
 
 
-# def update_data(vm, pwm, cur1, cur2, speed1, speed2, cur_hall1, cur_hall2, axis_x, axis_y, axis_z, temp, error_code1):
-def update_data(cur_temp0, target_temp0, cur_pwm0, cur_temp1, target_temp1, cur_pwm1, cur_temp2, target_temp2, cur_pwm2, motor_tarangle):
+def update_data(data):
     global update_data_flag
     global counter
-    global error_code
+    global sample_time
 
-    b_cur_temp0.pop(0)
-    b_cur_temp0.append(cur_temp0/100)
-    b_target_temp0.pop(0)
-    b_target_temp0.append(target_temp0)
-    b_cur_pwm0.pop(0)
-    b_cur_pwm0.append(cur_pwm0)
-
-    b_cur_temp1.pop(0)
-    b_cur_temp1.append(cur_temp1/100)
-    b_target_temp1.pop(0)
-    b_target_temp1.append(target_temp1)
-    b_cur_pwm1.pop(0)
-    b_cur_pwm1.append(cur_pwm1)
-
-    b_cur_temp2.pop(0)
-    b_cur_temp2.append(cur_temp2/100)
-    b_target_temp2.pop(0)
-    b_target_temp2.append(target_temp2)
-    b_cur_pwm2.pop(0)
-    b_cur_pwm2.append(cur_pwm2)
-
-    b_motor_tarangle.pop(0)
-    b_motor_tarangle.append(motor_tarangle)
+    if(is_play == False):
+        return
 
     update_data_flag = True
+
+    # sample_time1 = np.arange(len(data))
+    # #将原始序列分成多段,用一次函数拟合为函数f1和用三次函数拟合为函数f2
+    # f1=interp1d(sample_time1,data,kind='linear')
+    # # f2=interp1d(sample_time,data,kind='cubic')
+   
+    
+    # #在原区间内均匀选取30个点,因为要插值到长度30.
+    # x_pred=np.linspace(0,len(data),num=len(data))
+    
+    
+    # #用函数f1求出插值的30个点对应的值
+    # y1=f1(x_pred)
+
+    for i in range(len(data)):
+        b_cur_level.pop(0)
+        b_cur_level.append(data[i] * 5000 / 256)
+   
     counter += 1
-
-
-"""完成拟合曲线参数计算"""
-
-
-def liner_fitting(data_y):
-
-    data_x = [1, 2, 3, 4, 5, 6]
-    size = len(data_x)
-    i = 0
-    sum_xy = 0
-    sum_y = 0
-    sum_x = 0
-    sum_sqare_x = 0
-    average_x = 0
-    average_y = 0
-    while i < size:
-        sum_xy += data_x[i]*data_y[i]
-        sum_y += data_y[i]
-        sum_x += data_x[i]
-        sum_sqare_x += data_x[i]*data_x[i]
-        i += 1
-    average_x = sum_x/size
-    average_y = sum_y/size
-    return_k = (size*sum_xy-sum_x*sum_y)*20/(size*sum_sqare_x-sum_x*sum_x)
-    return_b = average_y-average_x*return_k
-    print(return_k)
-    return return_k
 
 
 def func(event):
@@ -110,98 +60,64 @@ def onpress(event):
     else:
         is_play = True
 
+def on_clicked(self, event):
+    global b_cur_level
+    global sample_time
+
+    b_cur_level.clear()
+    sample_time.clear()
+    b_cur_level = [0] * 100
+    sample_time = np.arange(100)
+
 
 def update_picture():
     global is_play
     global update_data_flag
     global counter
-    global error_code
+    global zoom_scale
+    global is_zoomed
 
     rc('mathtext', default='regular')
     mpl.rcParams['font.sans-serif'] = ['SimHei']  # 添加这条可以让图形显示中文
     # 解决保存图像是负号‘-’显示为方块的问题 作者：GXTon https://www.bilibili.com/read/cv12112253 出处：bilibili
     mpl.rcParams['axes.unicode_minus'] = False
+
     plt.ion()  # 开启interactive mode 成功的关键函数
     figID = "app 参数"
     fig = plt.figure(figID)
     cid_press = fig.canvas.mpl_connect('button_press_event', onpress)
     counter = 0
 
-    ax1 = fig.add_subplot(131)
-    ax2 = fig.add_subplot(132)
-    ax3 = fig.add_subplot(133)
-    # ax4 = fig.add_subplot(224)
-    # ax31 = ax3.twinx()
-    # ax21 = ax2.twinx()
+    ax1 = fig.add_subplot(111)
+    
 
-    lns1 = ax1.plot(sample_time, b_cur_pwm0, '-y', label='当前PWM')
-    lns2 = ax1.plot(sample_time, b_target_temp0, '-b', label='设置水温')
-    lns3 = ax1.plot(sample_time, b_cur_temp0, '-r', label='当前水温')
+    lns1 = ax1.plot(sample_time, b_cur_level, '-b', label='level')
 
-    lns4 = ax2.plot(sample_time, b_cur_temp1, '-r', label='当前风温')
-    lns5 = ax2.plot(sample_time, b_target_temp1, '-b', label='设置风温')
-    lns6 = ax2.plot(sample_time, b_cur_pwm1, '-y', label='当前PWM')
 
-    lns7 = ax3.plot(sample_time, b_cur_temp2, '-r', label='当前座温')
-    lns8 = ax3.plot(sample_time, b_target_temp2, '-b', label='设置座温')
-    lns9 = ax3.plot(sample_time, b_cur_pwm2, '-y', label='当前PWM')
+    ax1.yaxis.set_ticks([-5000, -4000, -3000, -2000, -1000, 0, 1000, 2000, 3000, 4000, 5000])
+    ax1.xaxis.set_ticks([0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000])
+    ax1.grid(linestyle="-.", axis="both")
+    ax1.set_ylabel(r"")
+    ax1.set_ylim(-10000, 10000)
 
-    ax1.yaxis.set_ticks([0, 20, 40, 60, 80, 100])
-    ax1.grid(linestyle=":", axis="both")
-    ax1.set_ylabel(r"水温/PWM")
-    ax1.set_ylim(0, 110)
 
-    ax2.yaxis.set_ticks([0, 20, 40, 60, 80, 100])
-    ax2.grid(linestyle=":", axis="both")
-    ax2.set_ylabel(r"风温/PWM")
-    ax2.set_ylim(0, 110)
-
-    ax3.yaxis.set_ticks([0, 20, 40, 60, 80, 100])
-    ax3.grid(linestyle=":", axis="both")
-    ax3.set_ylabel(r"座温/PWM")
-    ax3.set_ylim(0, 110)
 
     # added these lines
-    lns = lns1+lns2+lns3
-    labs = [l.get_label() for l in lns]
-    ax1.legend(lns, labs, loc=2)
+    # lns = lns1
+    # labs = [l.get_label() for l in lns]
+    # ax1.legend(lns, labs, loc=2)
 
-    lns = lns4+lns5+lns6
-    labs = [l.get_label() for l in lns]
-    ax2.legend(lns, labs, loc=2)
+    buttonaxe = plt.axes([0.84, 0.03, 0.03, 0.03])
+    button1 = Button(buttonaxe, '放大',color='khaki', hovercolor='yellow')
+    button1.on_clicked(Button_handlers().zoom_in)
 
-    lns = lns7+lns8+lns9
-    labs = [l.get_label() for l in lns]
-    ax3.legend(lns, labs, loc=2)
+    buttonaxe2 = plt.axes([0.90, 0.03, 0.03, 0.03])
+    button2 = Button(buttonaxe2, '缩小',color='khaki', hovercolor='yellow')
+    button2.on_clicked(Button_handlers().zoom_out)
 
     plt.show()
     mng = plt.get_current_fig_manager()
-    mng.window.state("zoomed")
-
-    # 以●绘制最大值点的位置
-    y1_max = np.argmax(b_cur_temp0)
-    ax11_plot, = ax1.plot(y1_max, b_cur_temp0[y1_max], 'ko')
-    show_max = '['+str(b_cur_temp0[y1_max])+']'
-    annotate1 = ax1.annotate(show_max, xy=(
-        y1_max, b_cur_temp0[y1_max]), xytext=(y1_max, b_cur_temp0[y1_max]))
-
-    y1_max = np.argmax(b_cur_temp1)
-    ax21_plot, = ax2.plot(y1_max, b_cur_temp1[y1_max], 'ko')
-    show_max = '['+str(b_cur_temp1[y1_max])+']'
-    annotate2 = ax2.annotate(show_max, xy=(
-        y1_max, b_cur_temp1[y1_max]), xytext=(y1_max, b_cur_temp1[y1_max]))
-
-    y1_max = np.argmax(b_cur_temp2)
-    ax31_plot, = ax3.plot(y1_max, b_cur_temp2[y1_max], 'ko')
-    show_max = '['+str(b_cur_temp2[y1_max])+']'
-    annotate3 = ax1.annotate(show_max, xy=(
-        y1_max, b_cur_temp2[y1_max]), xytext=(y1_max, b_cur_temp2[y1_max]))
-
-    y1_max = np.argmax(b_cur_temp0)
-    ax12_plot, = ax1.plot(y1_max, b_cur_temp0[y1_max], 'k^')
-
-    y1_max = np.argmax(b_cur_temp1)
-    ax22_plot, = ax2.plot(y1_max, b_cur_temp1[y1_max], 'k^')
+    mng.window.state("zoomed")  
 
 
     while(True):
@@ -212,91 +128,70 @@ def update_picture():
 
         if(is_play is True):
             # plt.clf()
-            ax1.lines[0].set_data(sample_time, b_cur_pwm0)  # set plot data
-            ax1.lines[1].set_data(sample_time, b_target_temp0)  # set plot data
-            ax1.lines[2].set_data(sample_time, b_cur_temp0)  # set plot data
-            ax1.relim()                  # recompute the data limits
+            ax1.lines[0].set_data(sample_time, b_cur_level)  # set plot data
+            # ax1.relim()                  # recompute the data limits
             ax1.autoscale_view()         # automatic axis scaling
 
-            ax1.set_xlabel("target temp:" + '{:d}'.format(b_target_temp0[-1]) + ' diff:' + '{:.2f}'.format(b_cur_temp0[-1] - b_target_temp0[-1]))
+            m_time = zoom_value[zoom_scale] * 2000
 
-            ax2.lines[2].set_data(sample_time, b_cur_pwm1)  # set plot data
-            ax2.lines[0].set_data(sample_time, b_cur_temp1)  # set plot data
-            ax2.lines[1].set_data(sample_time, b_target_temp1)  # set plot data
+            if(m_time >= 1000):
+                m_disp = '{:.2f}'.format(m_time / 1000) + 'ms'
+            else:
+                m_disp = '{:.0f}'.format(m_time) + 'us'
             
-            ax2.relim()                  # recompute the data limits
-            ax2.autoscale_view()         # automatic axis scaling
-
-            ax2.set_xlabel("target temp:" + '{:d}'.format(b_target_temp1[-1]) + ' diff:' + '{:.2f}'.format(b_cur_temp1[-1] - b_target_temp1[-1]))
-
-            # ax21.lines[0].set_data(sample_time, b_cur_temp1)  # set plot data
-            # ax21.relim()                  # recompute the data limits
-            # ax21.autoscale_view()         # automatic axis scaling
-
-            ax3.lines[0].set_data(sample_time, b_cur_temp2)  # set plot data
-            ax3.lines[1].set_data(sample_time, b_target_temp2)  # set plot data
-            ax3.lines[2].set_data(sample_time, b_cur_pwm2)  # set plot data
-            ax3.relim()                  # recompute the data limits
-            ax3.autoscale_view()         # automatic axis scaling
-
-            ax3.set_xlabel("target temp:" + '{:d}'.format(b_target_temp2[-1]) + ' diff:' + '{:.2f}'.format(b_cur_temp2[-1] - b_target_temp2[-1]) + ' time:' + '{:d}'.format(counter))
-
-            # 以●绘制最大值点的位置
-            y1_max = np.argmax(b_cur_temp0)
-            ax11_plot.set_data(y1_max, b_cur_temp0[y1_max])
-            show_max = '['+str(b_cur_temp0[y1_max])+']'
-            annotate1.remove()
-            annotate1 = ax1.annotate(show_max, xy=(
-                y1_max, b_cur_temp0[y1_max]), xytext=(y1_max, b_cur_temp0[y1_max]))
-
-            
-            # 状态发生变化
-            tarangle_prev = b_motor_tarangle[-2]
-            tarangle = b_motor_tarangle[-1]
-            for i in range(len(b_motor_tarangle) - 1):
-                tarangle = b_motor_tarangle[i]
-                if(tarangle != tarangle_prev and tarangle > 200):
-                    ax12_plot.set_data(i,b_cur_temp0[i])
-                    ax22_plot.set_data(i,b_cur_temp1[i])
-                tarangle_prev = tarangle
-
-            y1_max = np.argmax(b_cur_temp1)
-            ax21_plot.set_data(y1_max, b_cur_temp1[y1_max])
-            show_max = '['+str(b_cur_temp1[y1_max])+']'
-            annotate2.remove()
-            annotate2 = ax2.annotate(show_max, xy=(
-                y1_max, b_cur_temp1[y1_max]), xytext=(y1_max, b_cur_temp1[y1_max]))
-
-            y1_max = np.argmax(b_cur_temp2)
-            ax31_plot.set_data(y1_max, b_cur_temp2[y1_max])
-            show_max = '['+str(b_cur_temp2[y1_max])+']'
-            annotate3.remove()
-            annotate3 = ax3.annotate(show_max, xy=(
-                y1_max, b_cur_temp2[y1_max]), xytext=(y1_max, b_cur_temp2[y1_max]))
+            ax1.set_xlabel("level:" + '{:.2f}'.format(b_cur_level[-1] / 100) + "V," + "  M " + m_disp)
 
         # update the plot and take care of window events (like resizing etc.)
         fig.canvas.flush_events()
         time.sleep(0.01)               # wait for next loop iteration
 
+        if(is_zoomed == True):
+            ax1.set_xlim(0, 1000 * zoom_value[zoom_scale])
+            ax1.xaxis.set_ticks([0, 100 * zoom_value[zoom_scale], 200 * zoom_value[zoom_scale], 300 * zoom_value[zoom_scale], 400 * zoom_value[zoom_scale], 500 * zoom_value[zoom_scale], 600 * zoom_value[zoom_scale], 700 * zoom_value[zoom_scale], 800 * zoom_value[zoom_scale], 900 * zoom_value[zoom_scale], 1000 * zoom_value[zoom_scale]])
+            ax1.axes.xaxis.set_ticklabels([])
+        is_zoomed = False
         update_data_flag = False
 
+class Button_handlers():
+    def zoom_in(self, event):
+        global zoom_scale
+        global is_play
+        global is_zoomed
+        global sample_time
+        global b_cur_level        
+
+        if(zoom_scale > 0):
+            zoom_scale = zoom_scale - 1
+            is_zoomed = True
+            if(zoom_value[zoom_scale] > 1):
+                b_cur_level.clear()
+                b_cur_level = [0] * int(zoom_value[zoom_scale] * 1000)
+                sample_time = np.arange(int(zoom_value[zoom_scale] * 1000))
+
+        is_play = True
+        print(zoom_scale)
+    def zoom_out(self, event):
+        global zoom_scale
+        global is_play
+        global sample_time
+        global b_cur_level
+        global is_zoomed
+
+        if(zoom_scale < len(zoom_value) - 1):
+            zoom_scale = zoom_scale + 1
+            is_zoomed = True
+            if(zoom_value[zoom_scale] > 1):
+                b_cur_level.clear()
+                b_cur_level = [0] * int(zoom_value[zoom_scale] * 1000)
+                sample_time = np.arange(int(zoom_value[zoom_scale] * 1000))
+        is_play = True
+        print(zoom_scale)
 
 if __name__ == '__main__':
-    i = 0
-    while i < 500:
-        b_cur_temp0.pop(0)
-        b_cur_temp0.append(i/10)
-        b_target_temp0.pop(0)
-        b_target_temp0.append(i/20)
-        b_cur_pwm0.pop(0)
-        b_cur_pwm0.append(i/30)
-
-        b_cur_temp1.pop(0)
-        b_cur_temp1.append(i/10)
-
-        b_cur_temp2.pop(0)
-        b_cur_temp2.append(50 - i/30)
-
-        i = i + 1
+    # i = 0
+    # while i < 1000:
+    #     b_cur_level.pop(0)
+    #     b_cur_level.append(i/10)
+    #     i = i + 1
 
     update_picture()

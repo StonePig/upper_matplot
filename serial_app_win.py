@@ -38,7 +38,7 @@ class serialApp ( wx.Frame ):
 		self.m_staticText3.Wrap( -1 )
 		bSizer3.Add( self.m_staticText3, 0, wx.ALL, 5 )
 		
-		m_comboBox_BaudChoices = [ u"9600", u"19200", u"38400", u"115200" ]
+		m_comboBox_BaudChoices = [ u"9600", u"19200", u"38400", u"115200", u"921600" ]
 		self.m_comboBox_Baud = wx.ComboBox( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, m_comboBox_BaudChoices, 0 )
 		self.m_comboBox_Baud.SetSelection( 0 )
 		bSizer3.Add( self.m_comboBox_Baud, 0, wx.ALL, 5 )
