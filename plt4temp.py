@@ -17,6 +17,7 @@ counter = 0
 zoom_scale = 5
 zoom_value = [0.05, 0.1, 0.125, 0.25, 0.5, 1, 1.25, 2.5, 5, 10, 12.5, 25, 50, 100]
 is_zoomed = True
+is_updated = False
 
 
 def update_data(data):
@@ -76,6 +77,7 @@ def update_picture():
     global counter
     global zoom_scale
     global is_zoomed
+    global is_updated
 
     rc('mathtext', default='regular')
     mpl.rcParams['font.sans-serif'] = ['SimHei']  # 添加这条可以让图形显示中文
@@ -85,7 +87,7 @@ def update_picture():
     plt.ion()  # 开启interactive mode 成功的关键函数
     figID = "app 参数"
     fig = plt.figure(figID)
-    cid_press = fig.canvas.mpl_connect('button_press_event', onpress)
+    # cid_press = fig.canvas.mpl_connect('button_press_event', onpress)
     counter = 0
 
     ax1 = fig.add_subplot(111)
@@ -107,11 +109,24 @@ def update_picture():
     # labs = [l.get_label() for l in lns]
     # ax1.legend(lns, labs, loc=2)
 
-    buttonaxe = plt.axes([0.84, 0.03, 0.03, 0.03])
+    buttonaxe = plt.axes([0.62, 0.03, 0.04, 0.04])
+    button_pause = Button(buttonaxe, '暂停',color='khaki', hovercolor='yellow')
+    button_pause.on_clicked(Button_handlers().pause)
+
+    buttonaxe = plt.axes([0.70, 0.03, 0.04, 0.04])
+    button_move1 = Button(buttonaxe, '左移',color='khaki', hovercolor='yellow')
+    button_move1.on_clicked(Button_handlers().move_left)
+
+    buttonaxe = plt.axes([0.76, 0.03, 0.04, 0.04])
+    button_move2 = Button(buttonaxe, '右移',color='khaki', hovercolor='yellow')
+    button_move2.on_clicked(Button_handlers().move_right)
+
+
+    buttonaxe = plt.axes([0.84, 0.03, 0.04, 0.04])
     button1 = Button(buttonaxe, '放大',color='khaki', hovercolor='yellow')
     button1.on_clicked(Button_handlers().zoom_in)
 
-    buttonaxe2 = plt.axes([0.90, 0.03, 0.03, 0.03])
+    buttonaxe2 = plt.axes([0.90, 0.03, 0.04, 0.04])
     button2 = Button(buttonaxe2, '缩小',color='khaki', hovercolor='yellow')
     button2.on_clicked(Button_handlers().zoom_out)
 
@@ -126,7 +141,8 @@ def update_picture():
 
         # counter = counter + 1
 
-        if(is_play is True):
+        if(is_play is True or is_updated is True):
+            is_updated = False
             # plt.clf()
             ax1.lines[0].set_data(sample_time, b_cur_level)  # set plot data
             # ax1.relim()                  # recompute the data limits
@@ -186,6 +202,35 @@ class Button_handlers():
                 sample_time = np.arange(int(zoom_value[zoom_scale] * 1000))
         is_play = True
         print(zoom_scale)
+
+    def move_left(self, event):
+        global b_cur_level 
+        global is_updated
+
+        if(is_play == True):
+            return
+        for i in range(5):
+            b_cur_level.pop(0)
+            b_cur_level.append(0)
+        is_updated = True
+
+    def move_right(self, event):
+        global b_cur_level 
+        global is_updated
+
+        if(is_play == True):
+            return
+        for i in range(5):
+            b_cur_level.pop(-1)
+            b_cur_level.insert(0, 0)
+        is_updated = True
+
+    def pause(self, event):
+        global is_play
+        if(is_play is True):
+            is_play = False
+        else:
+            is_play = True
 
 if __name__ == '__main__':
     # i = 0
