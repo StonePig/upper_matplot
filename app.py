@@ -129,6 +129,7 @@ class mainWin(serial_app_win.serialApp):
 			# fo.write('time,water temp,set temp,pwm,wind temp,set temp,pwm,seat temp,set temp,pwm,motor tarangle' + '\n')
 		content = []
 		line = 0
+		length = 1000
 		while (self.port_opened):
 			time.sleep(0.001)
 			try:
@@ -136,9 +137,12 @@ class mainWin(serial_app_win.serialApp):
 				if n:
 					data = data + com.read(n)
 					# print(len(data))
-					# if(len(data) < 1000):
-					update_data(data)
-					data = b''
+					if(len(data) > length):
+						update_data(data[:length])
+						# print(data[:length])
+						data = data[length:]
+					
+					# data = b''
 
 			except Exception as exc:
 				# fo.write(''.join(content))
