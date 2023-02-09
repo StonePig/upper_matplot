@@ -117,6 +117,8 @@ def update_picture():
     ax1.set_ylabel(r"")
     ax1.set_ylim(-10000, 10000)
 
+    ax1.axes.xaxis.set_ticklabels([])
+
 
 
     # added these lines
@@ -179,7 +181,7 @@ def update_picture():
             is_updated = False
             # plt.clf()
             sample_time1 = np.arange(len(b_cur_level))
-            print(len(sample_time1), len(b_cur_level))
+            # print(len(sample_time1), len(b_cur_level))
             ax1.lines[0].set_data(sample_time1, b_cur_level)  # set plot data
             # ax1.relim()                  # recompute the data limits
             ax1.autoscale_view()         # automatic axis scaling
@@ -199,19 +201,22 @@ def update_picture():
         fig.canvas.flush_events()
         time.sleep(0.1)               # wait for next loop iteration
 
-        if(is_zoomed == True):
-            if(zoom_value[zoom_scale] > 1):
+        if(is_zoomed == True):           
+            if(is_play == True):
                 b_cur_level.clear()
-                b_cur_level = [0] * int(zoom_value[zoom_scale] * 1000)
-                if(is_play == False):
-                    b_cur_level = b_backup[:min(len(b_backup), len(b_cur_level))]
+                if(zoom_value[zoom_scale] >= 1):
+                    b_cur_level = [0] * int(zoom_value[zoom_scale] * 1000)
+                else:
+                    b_cur_level = [0] * int(1 * 1000)
+                # if(is_play == False):
+                #     b_cur_level = b_backup[:min(len(b_backup), len(b_cur_level))]
                 b_backup.clear()
                 b_backup = [0] * int(zoom_value[zoom_scale] * 1000)
                 b_backup = b_cur_level.copy()
                         
             ax1.set_xlim(0, 1000 * zoom_value[zoom_scale])
             ax1.xaxis.set_ticks([0, 100 * zoom_value[zoom_scale], 200 * zoom_value[zoom_scale], 300 * zoom_value[zoom_scale], 400 * zoom_value[zoom_scale], 500 * zoom_value[zoom_scale], 600 * zoom_value[zoom_scale], 700 * zoom_value[zoom_scale], 800 * zoom_value[zoom_scale], 900 * zoom_value[zoom_scale], 1000 * zoom_value[zoom_scale]])
-            ax1.axes.xaxis.set_ticklabels([])
+            
             is_updated = True
         is_zoomed = False
         update_data_flag = False

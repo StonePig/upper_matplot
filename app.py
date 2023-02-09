@@ -18,7 +18,9 @@ import struct
 
 import re
 
+
 from plt4temp import *
+from LZ77 import *
 
 from multiprocessing import Process
 import tkinter as tk
@@ -129,16 +131,24 @@ class mainWin(serial_app_win.serialApp):
 			# fo.write('time,water temp,set temp,pwm,wind temp,set temp,pwm,seat temp,set temp,pwm,motor tarangle' + '\n')
 		content = []
 		line = 0
-		length = 1000
+		length = 256
 		while (self.port_opened):
-			time.sleep(0.001)
+			# time.sleep(0.001)
 			try:
 				n = com.inWaiting()
 				if n:
 					data = data + com.read(n)
 					# print(len(data))
 					if(len(data) > length):
-						update_data(data[:length])
+						# for debug
+						hfm_code_str, hfm_tree = compression_hfm(data[:length])
+						# print(hfm_code_str)
+						# print(hfm_tree)
+						words_str = decompression_hfm(hfm_code_str, hfm_tree)
+						print(int(len(hfm_code_str) * 100 / 8 / length))
+						# print(words_str)					
+						# update_data(data[:length])
+						update_data(words_str)
 						# print(data[:length])
 						data = data[length:]
 					
